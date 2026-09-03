@@ -1,0 +1,56 @@
+{
+  "model_name": "AeroYield Crop Vital Classifier",
+  "model_type": "GradientBoostingClassifier",
+  "model_version": "1.0",
+  "framework": "scikit-learn",
+  "metrics": {
+    "f1_score": 0.9536,
+    "accuracy": 0.9541,
+    "precision": 0.9542,
+    "recall": 0.9536
+  },
+  "classes": {
+    "0": {"label": "Healthy", "label_ur": "صحت مند", "score": 85, "range": "75-100"},
+    "1": {"label": "Moderate_Stress", "label_ur": "پانی کی ضرورت", "score": 60, "range": "45-74"},
+    "2": {"label": "Severe_Stress", "label_ur": "خطرہ", "score": 30, "range": "0-44"}
+  },
+  "features": [
+    "Temperature",
+    "Rainfall",
+    "Humidity",
+    "Wind_Speed",
+    "Temp_Min",
+    "Temp_Max",
+    "Pressure",
+    "Dew_Point",
+    "Cloud_Cover",
+    "Temp_Range",
+    "month",
+    "is_hot_day",
+    "is_cold_day",
+    "Weather_Condition",
+    "Season",
+    "Region",
+    "wind_category"
+  ],
+  "feature_types": {
+    "numeric": [
+      "Temperature", "Rainfall", "Humidity", "Wind_Speed",
+      "Temp_Min", "Temp_Max", "Pressure", "Dew_Point",
+      "Cloud_Cover", "Temp_Range", "month", "is_hot_day", "is_cold_day"
+    ],
+    "categorical": ["Weather_Condition", "Season", "Region", "wind_category"]
+  },
+  "training_data": {
+    "source": "Peshawar weather station (proxy for Mardan, KPK)",
+    "samples": 12000,
+    "date_range": "2015-2025",
+    "split": {"train": 0.8, "test": 0.2}
+  },
+  "artifact": "crop_vital_model.pkl",
+  "serialised_with": "joblib",
+  "python_version": "3.11",
+  "sklearn_version": "1.5.2",
+  "created_by": "AeroYield ML Team",
+  "created_at": "2026-08-20"
+}
