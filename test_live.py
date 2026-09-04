@@ -1,9 +1,11 @@
 """Quick test script for live AeroYield API on Render."""
 
+import os
+
 import httpx
 
 BASE = "https://aeroyield-api.onrender.com"
-HEADERS = {"X-API-Key": "aeroyield-prod-key-2026"}
+HEADERS = {"X-API-Key": os.environ.get("AEROYIELD_API_KEY", "")}
 
 
 def test(name, response):
