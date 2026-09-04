@@ -65,6 +65,7 @@ async def predict_farm(
         crop_vital_score=prediction["crop_vital_score"],
         status_label_en=prediction["status_label_en"],
         status_label_ur=prediction["status_label_ur"],
+        coordinates=[farm.latitude, farm.longitude],
         soil_moisture_pct=round(random.uniform(40.0, 80.0), 1),
         ndvi_index=round(random.uniform(0.3, 0.85), 2),
         weather=WeatherSummary(

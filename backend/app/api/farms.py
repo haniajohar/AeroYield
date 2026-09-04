@@ -79,6 +79,7 @@ async def _build_farm_response(
         crop_vital_score=prediction["crop_vital_score"],
         status_label_en=prediction["status_label_en"],
         status_label_ur=prediction["status_label_ur"],
+        coordinates=[farm.latitude, farm.longitude],
         soil_moisture_pct=_mock_soil_moisture(),
         ndvi_index=_mock_ndvi(),
         weather=WeatherSummary(

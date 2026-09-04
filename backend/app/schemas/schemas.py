@@ -54,6 +54,12 @@ class FarmResponse(BaseModel):
     crop_vital_score: int
     status_label_en: str
     status_label_ur: str
+    coordinates: list[float] = Field(
+        ...,
+        min_length=2,
+        max_length=2,
+        description="[latitude, longitude] for GIS map plotting",
+    )
     soil_moisture_pct: float = Field(
         ..., description="Placeholder until satellite data integration"
     )

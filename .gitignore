@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Environment & data
+.env
+*.db
+*.sqlite3
+
+# Model artifacts
+*.pkl
+
+# Media cache
+audio_cache/
+*.mp3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp browser-agent screenshots
+render_*.png
+github_new_repo_page.png
