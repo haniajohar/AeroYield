@@ -114,9 +114,6 @@ def run_prediction(features: dict[str, Any]) -> dict[str, Any]:
     """
     model = get_model()
 
-    encoded = _encode_features(features)
-    input_df = pd.DataFrame([encoded])[FEATURE_COLUMNS]
-
     if model is None:
         # Fallback: deterministic mock based on temperature
         temp = features.get("Temperature", 25)
@@ -133,6 +130,16 @@ def run_prediction(features: dict[str, Any]) -> dict[str, Any]:
             if i != cls:
                 probs[i] = remaining
     else:
+        # The ML team's artifact is a sklearn Pipeline: its ColumnTransformer
+        # performs imputation / standard scaling / one-hot encoding internally,
+        # so it expects RAW feature values (string categoricals like "No Rain").
+        # The legacy dev mock was a bare classifier trained on integer codes,
+        # which is why the integer-encoding branch is kept for it.
+        if hasattr(model, "steps"):  # sklearn Pipeline (real ML artifact)
+            input_df = pd.DataFrame([features])[FEATURE_COLUMNS]
+        else:  # legacy mock (bare GradientBoostingClassifier)
+            input_df = pd.DataFrame([_encode_features(features)])[FEATURE_COLUMNS]
+
         cls = int(model.predict(input_df)[0])
         raw_probs = model.predict_proba(input_df)[0]
         probs = [round(float(p), 4) for p in raw_probs]
