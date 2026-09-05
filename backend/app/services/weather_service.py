@@ -1,9 +1,9 @@
-"""Weather service — fetches data from NASA POWER API for a given lat/lon."""
+"""Weather service — fetches NASA POWER data and infers ML Region by location."""
 
 from __future__ import annotations
 
 import logging
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -12,30 +12,27 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# NASA POWER parameter keys
 POWER_PARAMS = [
-    "T2M",       # Temperature at 2 m
-    "T2M_MIN",   # Min temperature
-    "T2M_MAX",   # Max temperature
-    "T2MDEW",    # Dew point
-    "PRECTOTCORR",  # Precipitation
-    "RH2M",      # Relative humidity
-    "WS2M",      # Wind speed at 2 m
-    "PS",        # Surface pressure
-    "CLRSKY_SFC_PAR_TOT",  # Proxy for cloud cover
-    "ALLSKY_SFC_SW_DWN",   # Solar radiation
+    "T2M", "T2M_MIN", "T2M_MAX", "T2MDEW", "PRECTOTCORR", "RH2M",
+    "WS2M", "PS", "CLRSKY_SFC_PAR_TOT", "ALLSKY_SFC_SW_DWN",
 ]
 
 
+def province_for_coordinates(latitude: float, longitude: float) -> str:
+    """Coarse offline province lookup for the ML Region categorical feature."""
+    if latitude >= 31.0 and longitude <= 74.8:
+        return "KPK"
+    if latitude >= 29.0 and longitude >= 69.0:
+        return "Punjab"
+    if latitude < 29.0 and longitude >= 66.0:
+        return "Sindh"
+    return "Balochistan"
+
+
 async def fetch_weather(latitude: float, longitude: float) -> dict[str, Any]:
-    """Fetch latest daily weather from NASA POWER and return a dict
-    matching the 17 features expected by the ML model.
-
-    Falls back to synthetic defaults on any error.
-    """
-    end = date.today() - timedelta(days=2)  # POWER has ~2-day lag
+    """Fetch latest daily weather matching the model's 17 input features."""
+    end = date.today() - timedelta(days=2)
     start = end - timedelta(days=1)
-
     params = {
         "start": start.strftime("%Y%m%d"),
         "end": end.strftime("%Y%m%d"),
@@ -48,35 +45,26 @@ async def fetch_weather(latitude: float, longitude: float) -> dict[str, Any]:
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.get(settings.nasa_power_base_url, params=params)
-            resp.raise_for_status()
-            data = resp.json()
+            response = await client.get(settings.nasa_power_base_url, params=params)
+            response.raise_for_status()
+            data = response.json()
 
-        props = data.get("properties", {}).get("parameter", {})
-        date_key = list(props.get("T2M", {}).keys())[-1]  # latest date
+        parameters = data.get("properties", {}).get("parameter", {})
+        date_key = list(parameters.get("T2M", {}).keys())[-1]
 
-        def _val(key: str, fallback: float = 0.0) -> float:
-            v = float(props.get(key, {}).get(date_key, fallback))
-            # NASA POWER uses -999 as a fill value for missing data
-            return fallback if v == -999.0 or v == -999 else v
+        def value(key: str, fallback: float = 0.0) -> float:
+            result = float(parameters.get(key, {}).get(date_key, fallback))
+            return fallback if result == -999.0 else result
 
-        temp = _val("T2M", 28.0)
-        temp_min = _val("T2M_MIN", 22.0)
-        temp_max = _val("T2M_MAX", 34.0)
-        rainfall = _val("PRECTOTCORR", 0.0)
-        humidity = _val("RH2M", 55.0)
-        wind = _val("WS2M", 8.0)
-        pressure = _val("PS", 1005.0)
-        dew = _val("T2MDEW", 18.0)
-        cloud = _val("CLRSKY_SFC_PAR_TOT", 20.0)
-
-        # Derive engineered features
-        temp_range = temp_max - temp_min
+        temperature = value("T2M", 28.0)
+        temp_min = value("T2M_MIN", 22.0)
+        temp_max = value("T2M_MAX", 34.0)
+        rainfall = value("PRECTOTCORR", 0.0)
+        humidity = value("RH2M", 55.0)
+        wind = value("WS2M", 8.0)
+        cloud = value("CLRSKY_SFC_PAR_TOT", 20.0)
         month = int(date_key[4:6]) if len(date_key) >= 6 else end.month
-        is_hot = 1 if temp_max > 38 else 0
-        is_cold = 1 if temp_min < 5 else 0
 
-        # Heuristic weather condition
         if rainfall > 10:
             condition = "Heavy Rain"
         elif rainfall > 1:
@@ -86,7 +74,6 @@ async def fetch_weather(latitude: float, longitude: float) -> dict[str, Any]:
         else:
             condition = "No Rain"
 
-        # Season from month
         if month in (12, 1, 2):
             season = "Winter"
         elif month in (3, 4, 5):
@@ -96,48 +83,34 @@ async def fetch_weather(latitude: float, longitude: float) -> dict[str, Any]:
         else:
             season = "Autumn"
 
-        # Wind category
-        if wind < 3:
-            wind_cat = "calm"
-        elif wind < 10:
-            wind_cat = "breeze"
-        elif wind < 20:
-            wind_cat = "windy"
-        else:
-            wind_cat = "storm"
-
-        # Default region (KPK for Mardan farms)
-        region = "KPK"
-
+        wind_category = "calm" if wind < 3 else "breeze" if wind < 10 else "windy" if wind < 20 else "storm"
         return {
-            "Temperature": temp,
+            "Temperature": temperature,
             "Rainfall": rainfall,
             "Humidity": humidity,
             "Wind_Speed": wind,
             "Temp_Min": temp_min,
             "Temp_Max": temp_max,
-            "Pressure": pressure,
-            "Dew_Point": dew,
+            "Pressure": value("PS", 1005.0),
+            "Dew_Point": value("T2MDEW", 18.0),
             "Cloud_Cover": cloud,
-            "Temp_Range": temp_range,
+            "Temp_Range": temp_max - temp_min,
             "month": month,
-            "is_hot_day": is_hot,
-            "is_cold_day": is_cold,
+            "is_hot_day": 1 if temp_max > 38 else 0,
+            "is_cold_day": 1 if temp_min < 5 else 0,
             "Weather_Condition": condition,
             "Season": season,
-            "Region": region,
-            "wind_category": wind_cat,
+            "Region": province_for_coordinates(latitude, longitude),
+            "wind_category": wind_category,
         }
+    except Exception as error:
+        logger.warning("NASA POWER fetch failed (%s). Using defaults.", error)
+        return _default_weather(latitude, longitude)
 
-    except Exception as exc:
-        logger.warning("NASA POWER fetch failed (%s). Using defaults.", exc)
-        return _default_weather()
 
-
-def _default_weather() -> dict[str, Any]:
-    """Synthetic fallback weather for Mardan in summer."""
-    from datetime import datetime
-
+def _default_weather(latitude: float = 34.2, longitude: float = 72.0) -> dict[str, Any]:
+    """Synthetic fallback weather retaining the registered field's province."""
+    month = datetime.now().month
     return {
         "Temperature": 28.0,
         "Rainfall": 0.0,
@@ -149,11 +122,11 @@ def _default_weather() -> dict[str, Any]:
         "Dew_Point": 18.0,
         "Cloud_Cover": 20.0,
         "Temp_Range": 12.0,
-        "month": datetime.now().month,
+        "month": month,
         "is_hot_day": 0,
         "is_cold_day": 0,
         "Weather_Condition": "No Rain",
         "Season": "Summer",
-        "Region": "KPK",
+        "Region": province_for_coordinates(latitude, longitude),
         "wind_category": "windy",
     }

@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM model for a farm plot."""
+"""SQLAlchemy ORM model for a farm plot (Plan B ownership patch)."""
 
 from __future__ import annotations
 
@@ -17,6 +17,8 @@ class Farm(Base):
     field_id: Mapped[str] = mapped_column(
         String(120), unique=True, index=True, nullable=False
     )
+    # Plan B: a phone-linked UX filter only, not production authorization.
+    owner_phone: Mapped[str | None] = mapped_column(String(20), index=True, nullable=True)
     farmer_name: Mapped[str] = mapped_column(String(200), nullable=False)
     district: Mapped[str] = mapped_column(String(100), nullable=False)
     district_ur: Mapped[str] = mapped_column(String(100), nullable=False)
