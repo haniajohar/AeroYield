@@ -1,0 +1,47 @@
+name: aeroyield
+description: "AeroYield - Satellite Intelligence for Every Field"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # Internationalization utilities
+  intl: any
+
+  # State management
+  provider: ^6.1.2
+
+  # Google Fonts for bilingual typography (Inter/Poppins EN, Noto Nastaliq UR)
+  google_fonts: ^6.2.1
+
+  # Audio playback for voice advisories
+  audioplayers: ^6.1.0
+
+  # URL launching for WhatsApp & helpline dialer
+  url_launcher: ^6.3.0
+
+  # HTTP client for backend API calls
+  http: ^1.2.0
+
+  # Device-linked demo profiles, location registration, and voice input
+  shared_preferences: ^2.3.3
+  geolocator: ^14.0.2
+  speech_to_text: ^7.3.0
+
+  # Material icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
