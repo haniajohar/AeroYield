@@ -1,0 +1,19 @@
+{
+  "Temperature": 38.0,
+  "Rainfall": 0.0,
+  "Humidity": 85.0,
+  "Wind_Speed": 12.0,
+  "Temp_Min": 30.0,
+  "Temp_Max": 42.0,
+  "Pressure": 1002.0,
+  "Dew_Point": 25.0,
+  "Cloud_Cover": 10.0,
+  "Temp_Range": 12.0,
+  "month": 6,
+  "is_hot_day": 1,
+  "is_cold_day": 0,
+  "Weather_Condition": "No Rain",
+  "Season": "Summer",
+  "Region": "KPK",
+  "wind_category": "windy"
+}
