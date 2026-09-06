@@ -6,6 +6,12 @@ AeroYield turns a farmer's field location and live weather conditions into a sim
 
 > **Status:** University/demo project. The ownership mechanism described below is a demo-level privacy filter, not production-grade authentication or authorization. See [Limitations](#limitations--honest-scope) before treating this as production-ready.
 
+**🔗 Live links:**
+- **Admin Web Panel:** [aeroyield-one.vercel.app](https://aeroyield-one.vercel.app/)
+- **Backend API Docs (Swagger):** [aeroyield-api.onrender.com/docs](https://aeroyield-api.onrender.com/docs)
+
+> Note: the backend is hosted on Render's free tier, so the first request after a period of inactivity may take a few seconds while the service cold-starts.
+
 ---
 
 ## Table of Contents
@@ -155,6 +161,13 @@ The backend uses a deployed **AeroYield Crop Vital Classifier** — a scikit-lea
 Region (`KPK`, `Punjab`, `Sindh`, `Balochistan`) is derived from a coarse coordinate-based function — not an official GIS boundary service.
 
 ## Getting Started
+
+### Live deployments
+
+| Component | URL |
+|---|---|
+| Admin Web Panel | https://aeroyield-one.vercel.app/ |
+| Backend API (Swagger/OpenAPI docs) | https://aeroyield-api.onrender.com/docs |
 
 ### Flutter app
 
